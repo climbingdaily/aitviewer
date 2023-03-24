@@ -1,14 +1,15 @@
 # Access SMPL models.
-smplx_models: "../data/smplx_models"
-star_models: "../data/star_models"
+smplx_models: "./data/smplx_models"
+star_models: "./data/star_models"
 
 # Access to datasets.
 datasets:
   amass:
-    "../data/amass"
+    "./data/amass"
 
 # Pytorch configuration.
-device: "cuda:0"
+# device: "cuda:0"
+device: "cpu"
 f_precision: 32
 i_precision: 64
 

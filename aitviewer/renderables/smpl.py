@@ -313,7 +313,7 @@ class SMPLSequence(Node):
         """Creates a SMPL sequence whose single frame is a SMPL mesh in T-Pose."""
 
         if smpl_layer is None:
-            smpl_layer = SMPLLayer(model_type="smplh", gender="neutral")
+            smpl_layer = SMPLLayer(model_type="smpl", gender="neutral")
 
         poses = np.zeros([frames, smpl_layer.bm.NUM_BODY_JOINTS * 3])  # including hands and global root
         return cls(poses, smpl_layer, betas=betas, **kwargs)
