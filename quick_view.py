@@ -43,11 +43,18 @@ def get_poses(humans, person='second_person'):
         humans[person]['beta'] = [0] * 10
     if 'gender' not in humans[person]:
         humans[person]['gender'] = 'male'
+    try:
+        pose  = humans[person]['opt_pose']
+    except KeyError:
+        pose  = humans[person]['pose']
 
-    pose        = humans[person]['opt_pose']
-    trans       = humans[person]['opt_trans']
-    gender      = humans[person]['gender']
-    betas       = humans[person]['beta']
+    try:
+        trans = humans[person]['opt_trans']
+    except:
+        trans = humans[person]['mocap_trans']
+
+    gender    = humans[person]['gender']
+    betas     = humans[person]['beta']
 
     return  {"body_pose": pose[:, 3: 24 * 3].copy(), 
              "global_orient": pose[:, :3].copy(), 
@@ -68,8 +75,10 @@ def load_sloper4d_data(pkl_results, name='SLOPER4D', person='second_person', rgb
                          rotation   = aa2rot_numpy(np.array([-1, 0, 0]) * np.pi/2))
     return sloper4d_smpl
 
-def load_point_cloud(pkl_results):
-    point_clouds = pkl_results['second_person']['point_clouds']
+def load_point_cloud(pkl_results, person='second_person'):
+    if 'point_cloud' not in pkl_results[person]:
+        return None
+    point_clouds = pkl_results[person]['point_clouds']
     pp = np.array([fix_points_num(pts, 1024) for pts in point_clouds])
     ptc_sloper4d = PointClouds(points=pp, 
                             # position=np.array([1.0, 0.0, 0.0]), 
@@ -83,8 +92,8 @@ if __name__ == '__main__':
     # smpl_seq = SMPLSequence(poses, smpl_layer)
     v = Viewer()
 
-    pkl_path    = "C:\\Users\\DAI\\Desktop\\sloper4d\\2023-03-09T12_22_59_all_term_test.pkl"
-    scene_path  = "C:\\Users\\DAI\\Desktop\\hsc4d\\0417_003_perfect_3551frames.ply"
+    pkl_path    = "C:\\Users\\DAI\\Desktop\\hsc4d\\2023-03-26T22_50_40__test.pkl"
+    scene_path  = "C:\\Users\\DAI\\Desktop\\hsc4d\\0312_mingpei_ym_01_6535frames.ply"
 
     pkl_results = load_pkl(pkl_path)
     first_smpl  = load_sloper4d_data(pkl_results, 
@@ -94,7 +103,6 @@ if __name__ == '__main__':
                                      name   = 'second_person', 
                                      person = "second_person",
                                      rgb    = [228, 100, 100])
-    point_cloud = load_point_cloud(pkl_results)
     scene_mesh = o3d.io.read_triangle_mesh(scene_path)
     scene_mesh_seq = Meshes(
                 np.asarray(scene_mesh.vertices)[None, ...],
@@ -105,8 +113,10 @@ if __name__ == '__main__':
                 name="Scene",
                 rotation   = aa2rot_numpy(np.array([-1, 0, 0]) * np.pi/2))
     
+    point_cloud = load_point_cloud(pkl_results)
     v.scene.add(first_smpl)
     v.scene.add(second_smpl)
-    v.scene.add(point_cloud)
+    if point_cloud is not None:
+        v.scene.add(point_cloud)
     v.scene.add(scene_mesh_seq)
     v.run()
