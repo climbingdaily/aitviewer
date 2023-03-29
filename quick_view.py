@@ -76,7 +76,7 @@ def load_sloper4d_data(pkl_results, name='SLOPER4D', person='second_person', rgb
     return sloper4d_smpl
 
 def load_point_cloud(pkl_results, person='second_person'):
-    if 'point_cloud' not in pkl_results[person]:
+    if 'point_clouds' not in pkl_results[person]:
         return None
     point_clouds = pkl_results[person]['point_clouds']
     pp = np.array([fix_points_num(pts, 1024) for pts in point_clouds])
@@ -92,8 +92,11 @@ if __name__ == '__main__':
     # smpl_seq = SMPLSequence(poses, smpl_layer)
     v = Viewer()
 
-    pkl_path    = "C:\\Users\\DAI\\Desktop\\hsc4d\\2023-03-26T22_50_40__test.pkl"
-    scene_path  = "C:\\Users\\DAI\\Desktop\\hsc4d\\0312_mingpei_ym_01_6535frames.ply"
+    # pkl_path    = "C:\\Users\\DAI\\Desktop\\hsc4d\\2023-03-26T22_50_40__test.pkl"
+    # scene_path  = "C:\\Users\\DAI\\Desktop\\hsc4d\\0312_mingpei_ym_01_6535frames.ply"
+
+    pkl_path    = "C:\\Users\\DAI\\Desktop\\sloper4d\\2023-03-09T12_22_59_all_term_test.pkl"
+    scene_path  = "C:\\Users\\DAI\\Desktop\\hsc4d\\0417_003_perfect_3551frames.ply"
 
     pkl_results = load_pkl(pkl_path)
     first_smpl  = load_sloper4d_data(pkl_results, 
