@@ -39,19 +39,25 @@ def load_pkl(filename):
     return dets
 
 def get_poses(humans, person='second_person'):
+
+    if 'opt_pose' in humans[person]:
+        pose  = humans[person]['opt_pose']
+    elif 'pose' in humans[person]:
+        pose  = humans[person]['pose']
+    else:
+        return None
+
+    if 'opt_trans' in humans[person]:
+        trans = humans[person]['opt_trans']
+    elif 'mocap_trans' in humans[person]:
+        trans = humans[person]['mocap_trans']
+    else:
+        return None
+
     if 'beta' not in humans[person]:
         humans[person]['beta'] = [0] * 10
     if 'gender' not in humans[person]:
-        humans[person]['gender'] = 'male'
-    try:
-        pose  = humans[person]['opt_pose']
-    except KeyError:
-        pose  = humans[person]['pose']
-
-    try:
-        trans = humans[person]['opt_trans']
-    except:
-        trans = humans[person]['mocap_trans']
+        humans[person]['gender'] = 'neutral'
 
     gender    = humans[person]['gender']
     betas     = humans[person]['beta']
@@ -64,6 +70,8 @@ def get_poses(humans, person='second_person'):
 
 def load_sloper4d_data(pkl_results, name='SLOPER4D', person='second_person', rgb=[58, 147, 189]):
     results = get_poses(pkl_results, person)
+    if results is None:
+        return  None
     smpl_layer = SMPLLayer(model_type='smpl', gender=results["gender"], device=C.device)
     sloper4d_smpl  = SMPLSequence(poses_body=results['body_pose'],
                          smpl_layer = smpl_layer,
@@ -75,11 +83,16 @@ def load_sloper4d_data(pkl_results, name='SLOPER4D', person='second_person', rgb
                          rotation   = aa2rot_numpy(np.array([-1, 0, 0]) * np.pi/2))
     return sloper4d_smpl
 
-def load_point_cloud(pkl_results, person='second_person'):
+def load_point_cloud(pkl_results, person='second_person', points_num = 2048):
     if 'point_clouds' not in pkl_results[person]:
         return None
-    point_clouds = pkl_results[person]['point_clouds']
-    pp = np.array([fix_points_num(pts, 1024) for pts in point_clouds])
+    
+    point_clouds = [np.array([0, 0, 0])] * len(pkl_results['frame_num'])
+
+    for i, pf in enumerate(pkl_results[person]['point_frame']):
+        point_clouds[pkl_results['frame_num'].index(pf)] = pkl_results[person]['point_clouds'][i]
+
+    pp = np.array([fix_points_num(pts, points_num) for pts in point_clouds])
     ptc_sloper4d = PointClouds(points=pp, 
                             # position=np.array([1.0, 0.0, 0.0]), 
                             color=(149/255, 85/255, 149/255, 0.5), 
@@ -95,8 +108,12 @@ if __name__ == '__main__':
     # pkl_path    = "C:\\Users\\DAI\\Desktop\\hsc4d\\2023-03-26T22_50_40__test.pkl"
     # scene_path  = "C:\\Users\\DAI\\Desktop\\hsc4d\\0312_mingpei_ym_01_6535frames.ply"
 
-    pkl_path    = "C:\\Users\\DAI\\Desktop\\sloper4d\\2023-03-09T12_22_59_all_term_test.pkl"
-    scene_path  = "C:\\Users\\DAI\\Desktop\\hsc4d\\0417_003_perfect_3551frames.ply"
+    # pkl_path    = "C:\\Users\\DAI\\Desktop\\sloper4d\\2023-03-09T12_22_59_all_term_test.pkl"
+    # scene_path  = "C:\\Users\\DAI\\Desktop\\hsc4d\\0417_003_perfect_3551frames.ply"
+
+    
+    pkl_path    = "C:\\Users\\DAI\\Desktop\\sloper4d\\2023-03-30T11_13_02_seq002_test.pkl"
+    scene_path  = "C:\\Users\\DAI\\Desktop\\sloper4d\\scene002_6871frames.ply"
 
     pkl_results = load_pkl(pkl_path)
     first_smpl  = load_sloper4d_data(pkl_results, 
@@ -117,9 +134,13 @@ if __name__ == '__main__':
                 rotation   = aa2rot_numpy(np.array([-1, 0, 0]) * np.pi/2))
     
     point_cloud = load_point_cloud(pkl_results)
-    v.scene.add(first_smpl)
-    v.scene.add(second_smpl)
+
+    if first_smpl is not None:
+        v.scene.add(first_smpl)
+    if second_smpl is not None:
+        v.scene.add(second_smpl)
     if point_cloud is not None:
         v.scene.add(point_cloud)
+
     v.scene.add(scene_mesh_seq)
     v.run()
