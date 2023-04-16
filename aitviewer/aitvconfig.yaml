@@ -24,9 +24,9 @@ window_height: 900
 fullscreen: False
 resizable: True
 vsync: True
-export_dir: "../export"
-playback_fps: 60
-scene_fps: 60
+export_dir: "./export"
+playback_fps: 20
+scene_fps: 20
 run_animations: False
 dark_mode: False
 shadows_enabled: True
