@@ -18,7 +18,6 @@ from aitviewer.renderables.smpl import SMPLSequence
 from aitviewer.viewer import Viewer
 from aitviewer.configuration import CONFIG as C
 from aitviewer.models.smpl import SMPLLayer
-from aitviewer.utils.so3 import aa2rot_numpy
 
 def fix_points_num(points: np.array, num_points: int=512):
 
@@ -102,7 +101,6 @@ def load_sloper4d_data(pkl_results,
                             betas      = results['smpl_betas'],
                             color      = (rgb[0]/255, rgb[1] / 255, rgb[2] / 255, 1.0),
                             name       = f"{person}_{results['pose_attr']}-annot",
-                            #  rotation   = aa2rot_numpy(np.array([-1, 0, 0]) * np.pi/2)
                             z_up       = True)
         return sloper4d_smpl
     else:
@@ -145,24 +143,24 @@ if __name__ == '__main__':
     geometry_list = []
 
     geometry_list.append(load_sloper4d_data(pkl_results, 
-                                     person = "first_person",
-                                     pose_attr='opt_pose'))
+                                     person    = "first_person",
+                                     pose_attr ='opt_pose'))
     
     geometry_list.append(load_sloper4d_data(pkl_results, 
-                                     person = args.person,
-                                     pose_attr=args.pose,
-                                     rgb    = [228, 100, 100]))
+                                     person    = args.person,
+                                     pose_attr = args.pose,
+                                     rgb       = [228, 100, 100]))
     
     if args.scene_path is not None and os.path.exists(args.scene_path):
         scene_mesh = o3d.io.read_triangle_mesh(args.scene_path)
         scene_mesh_seq = Meshes(
                     np.asarray(scene_mesh.vertices)[None, ...],
                     np.asarray(scene_mesh.triangles),
-                    is_selectable=False,
-                    gui_affine=False,
-                    color=(160 / 255, 160 / 255, 160 / 255, 1.0),
-                    name="Scene",
-                    rotation   = aa2rot_numpy(np.array([-1, 0, 0]) * np.pi/2))
+                    is_selectable = False,
+                    gui_affine    = False,
+                    color         = (160 / 255, 160 / 255, 160 / 255, 1.0),
+                    name          = "Scene",
+                    z_up          = True)
         geometry_list.append(scene_mesh_seq)
     
     point_cloud = load_point_cloud(pkl_results)
