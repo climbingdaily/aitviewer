@@ -101,7 +101,7 @@ def load_sloper4d_data(pkl_results,
                             trans      = results['global_trans'],
                             betas      = results['smpl_betas'],
                             color      = (rgb[0]/255, rgb[1] / 255, rgb[2] / 255, 1.0),
-                            name       = f"{person}_{results['pose_attr']}-after_annot",
+                            name       = f"{person}_{results['pose_attr']}-annot",
                             #  rotation   = aa2rot_numpy(np.array([-1, 0, 0]) * np.pi/2)
                             z_up       = True)
         return sloper4d_smpl
@@ -125,15 +125,17 @@ def load_point_cloud(pkl_results, person='second_person', points_num = 1024):
     return ptc_sloper4d
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='将手动姿势添加到序列数据中。')
+    parser = argparse.ArgumentParser(description='将手动姿势添加到序列数据中. ')
     parser.add_argument('-P', '--pkl_file', type=str, 
                         default='D:\\Yudi Dai\\Documents\\Downloads\\humans_param.pkl',
-                        help='包含序列数据的PKL文件的路径。')
+                        help='包含序列数据的PKL文件的路径. ')
     parser.add_argument('-N', '--person', type=str, default='second_person',
-                        help='指定要更新手动姿势的人物。默认为"second_person"。')
+                        help='指定要更新手动姿势的人物. 默认为"second_person". ')
+    parser.add_argument('--pose', type=str, default='opt_pose',
+                        help='The pose that will be loaded from PKL file"')
     parser.add_argument('-S', '--scene_path', type=str, 
                         default="C:\\Users\\DAI\\Desktop\\sloper4d\\scene002_6871frames.ply",
-                        help='指定一个序列数据变量的名称。如果不提供,则从PKL文件中加载。')
+                        help='指定一个序列数据变量的名称. 如果不提供,则从PKL文件中加载. ')
 
     v = Viewer()
     args = parser.parse_args()
@@ -148,7 +150,7 @@ if __name__ == '__main__':
     
     geometry_list.append(load_sloper4d_data(pkl_results, 
                                      person = args.person,
-                                     pose_attr='opt_pose',
+                                     pose_attr=args.pose,
                                      rgb    = [228, 100, 100]))
     
     if args.scene_path is not None and os.path.exists(args.scene_path):

@@ -4,30 +4,26 @@ import argparse
 import numpy as np
 
 def add_manual_pose_to_seq(pkl_file, pose_file, person='second_person', seq=None):
-    # 从 PKL 文件中加载序列数据
+    # load sequence data from  PKL file
     with open(pkl_file, 'rb') as f:
         seq = pickle.load(f) if seq is None else seq
     
-    # 从 NPZ 文件中提取 'pose' 字段
+    # load 'pose' from NPZ
     data        = np.load(pose_file)
     poses_body  = data['poses_body']   # (n, 69)
     orientation = data['poses_root']   # (n, 3)
     pose        = np.concatenate((orientation, poses_body), axis=1)
 
     if person in seq:
-        # 检查 'opt_pose' 字段的长度是否与 'pose' 字段相等
         if len(seq[person]['pose']) == pose.shape[0]:
-            # 如果相等,则将 'pose' 字段添加到 'seq[person]' 中
             seq[person]['manual_pose'] = pose
             
-            # 在原始 PKL 文件名中添加 "_manual" 后缀
             new_pkl_file = os.path.splitext(pkl_file)[0] + '_manual.pkl'
             
-            # 将序列数据保存到新的 PKL 文件中
             with open(new_pkl_file, 'wb') as f:
                 pickle.dump(seq, f)
 
-            print(f'手动姿势已添加到 {person} 中, 并保存到新的PKL文件中：{new_pkl_file}')
+            print(f"'manual_pose' has been added to '{person}'\n file saved to: {new_pkl_file}")
             
         else:
             print('手动姿势未添加,因为opt_pose和pose长度不匹配。')
