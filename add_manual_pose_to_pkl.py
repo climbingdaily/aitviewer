@@ -3,7 +3,7 @@ import pickle
 import argparse
 import numpy as np
 
-def add_manual_pose_to_seq(pkl_file, pose_file, person='second_person', seq=None):
+def add_manual_pose_to_seq(pkl_file, pose_file, person='second_person', seq=None, rep_pose='manual_pose'):
     # load sequence data from  PKL file
     with open(pkl_file, 'rb') as f:
         seq = pickle.load(f) if seq is None else seq
@@ -16,14 +16,14 @@ def add_manual_pose_to_seq(pkl_file, pose_file, person='second_person', seq=None
 
     if person in seq:
         if len(seq[person]['pose']) == pose.shape[0]:
-            seq[person]['manual_pose'] = pose
+            seq[person][rep_pose] = pose
             
             new_pkl_file = os.path.splitext(pkl_file)[0] + '_manual.pkl'
             
             with open(new_pkl_file, 'wb') as f:
                 pickle.dump(seq, f)
 
-            print(f"'manual_pose' has been added to '{person}'\n file saved to: {new_pkl_file}")
+            print(f"'{rep_pose}' has been added to '{person}'\n file saved to: {new_pkl_file}")
             
         else:
             print('手动姿势未添加,因为opt_pose和pose长度不匹配。')
@@ -40,8 +40,10 @@ if __name__ == '__main__':
                         help='包含姿势数据的NPZ文件的路径。')
     parser.add_argument('-N', '--person', type=str, default='second_person',
                         help='指定要更新手动姿势的人物。默认为"second_person"。')
+    parser.add_argument('-R', '--rep_pose', type=str, default='manual_pose',
+                        help='指定把新姿势更新到的字段。默认为 manual_pose')
     parser.add_argument('-S', '--seq', type=str, default=None,
                         help='指定一个序列数据变量的名称。如果不提供,则从PKL文件中加载。')
     args = parser.parse_args()
 
-    add_manual_pose_to_seq(args.pkl_file, args.pose_file, args.person, seq=args.seq)
+    add_manual_pose_to_seq(args.pkl_file, args.pose_file, args.person, seq=args.seq, rep_pose=args.rep_pose)
