@@ -16,6 +16,7 @@ from aitviewer.renderables.point_clouds import PointClouds
 from aitviewer.renderables.meshes import Meshes
 from aitviewer.renderables.smpl import SMPLSequence
 from aitviewer.viewer import Viewer
+from aitviewer.utils.so3 import aa2rot_numpy
 from aitviewer.configuration import CONFIG as C
 from aitviewer.models.smpl import SMPLLayer
 
@@ -165,7 +166,8 @@ if __name__ == '__main__':
                     is_selectable = False,
                     gui_affine    = False,
                     color         = (160 / 255, 160 / 255, 160 / 255, 1.0),
-                    name          = "Scene")
+                    name          = "Scene",
+                    rotation      = aa2rot_numpy(np.array([-1, 0, 0]) * np.pi/2))
         
         geometry_dict.update({"scene": scene_mesh_seq})
     
