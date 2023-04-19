@@ -78,7 +78,7 @@ def get_poses(humans, person='second_person', pose_attr='opt_pose', trans_attr='
     return  {"body_pose"    : pose[:, 3: 24 * 3].copy(), 
              "global_orient": pose[:, :3].copy(), 
              "smpl_betas"   : np.array(betas), 
-             "global_trans" : trans, 
+             "trans"        : trans, 
              "gender"       : gender,
              "trans_attr"   : trans_attr,
              "pose_attr"    : pose_attr}
@@ -87,26 +87,30 @@ def load_sloper4d_data(pkl_results,
                        person='second_person', 
                        pose_attr='opt_pose',
                        trans_attr='opt_trans',
-                       rgb=None):
+                       rgb=None,
+                       is_global=True):
                        
     rgb = [58, 147, 189] if rgb is None else rgb
     results = get_poses(pkl_results, person, pose_attr, trans_attr)
-
+        
     if results is not None:
+        trans_offset = np.zeros_like(results['trans'])
+        if not is_global:
+            trans_offset[:, :2] = results['trans'][:, :2]
         smpl_layer     = SMPLLayer(model_type='smpl', gender=results["gender"], device=C.device)
         sloper4d_smpl  = SMPLSequence(poses_body=results['body_pose'],
                             smpl_layer = smpl_layer,
                             poses_root = results['global_orient'],
-                            trans      = results['global_trans'],
+                            trans      = results['trans'] - trans_offset,
                             betas      = results['smpl_betas'],
                             color      = (rgb[0]/255, rgb[1] / 255, rgb[2] / 255, 1.0),
                             name       = f"{person}_{results['pose_attr']}-annot",
                             z_up       = True)
-        return sloper4d_smpl
+        return {f"{person}_{results['pose_attr']}": sloper4d_smpl, "trans_offset": trans_offset}
     else:
-        return None
+        return {}
 
-def load_point_cloud(pkl_results, person='second_person', points_num = 1024):
+def load_point_cloud(pkl_results, person='second_person', points_num = 1024, trans=None):
     if 'point_clouds' not in pkl_results[person]:
         return None
     
@@ -116,23 +120,23 @@ def load_point_cloud(pkl_results, person='second_person', points_num = 1024):
         point_clouds[pkl_results['frame_num'].index(pf)] = pkl_results[person]['point_clouds'][i]
 
     pp = np.array([fix_points_num(pts, points_num) for pts in point_clouds])
-    ptc_sloper4d = PointClouds(points=pp, 
-                            # position=np.array([1.0, 0.0, 0.0]), 
-                            color=(149/255, 85/255, 149/255, 0.5), 
-                            z_up=True)
+    ptc_sloper4d = PointClouds(points = pp - trans[:, None, :] if trans is not None else pp, 
+                               color  = (149/255, 85/255, 149/255, 0.5), 
+                               z_up   = True)
     return ptc_sloper4d
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='将手动姿势添加到序列数据中. ')
     parser.add_argument('-P', '--pkl_file', type=str, 
-                        default='D:\\Yudi Dai\\Documents\\Downloads\\humans_param.pkl',
+                        default='D:\\Yudi Dai\\Documents\\Downloads\\2023-04-18T00_38_48_test_test.pkl',
                         help='包含序列数据的PKL文件的路径. ')
     parser.add_argument('-N', '--person', type=str, default='second_person',
                         help='指定要更新手动姿势的人物. 默认为"second_person". ')
     parser.add_argument('--pose', type=str, default='opt_pose',
                         help='The pose that will be loaded from PKL file"')
-    parser.add_argument('-S', '--scene_path', type=str, 
-                        default="C:\\Users\\DAI\\Desktop\\sloper4d\\scene002_6871frames.ply",
+    parser.add_argument('--is_global', type=bool, default=False,
+                        help='Whether to show the global translation')
+    parser.add_argument('-S', '--scene_path', type=str, default='',
                         help='指定一个序列数据变量的名称. 如果不提供,则从PKL文件中加载. ')
 
     v = Viewer()
@@ -140,16 +144,18 @@ if __name__ == '__main__':
     
     pkl_results = load_pkl(args.pkl_file)
 
-    geometry_list = []
+    geometry_dict = {}
 
-    geometry_list.append(load_sloper4d_data(pkl_results, 
+    geometry_dict.update(load_sloper4d_data(pkl_results, 
                                      person    = "first_person",
-                                     pose_attr ='opt_pose'))
+                                     pose_attr ='opt_pose',
+                                     is_global = args.is_global))
     
-    geometry_list.append(load_sloper4d_data(pkl_results, 
+    geometry_dict.update(load_sloper4d_data(pkl_results, 
                                      person    = args.person,
                                      pose_attr = args.pose,
-                                     rgb       = [228, 100, 100]))
+                                     rgb       = [228, 100, 100],
+                                     is_global = args.is_global))
     
     if args.scene_path is not None and os.path.exists(args.scene_path):
         scene_mesh = o3d.io.read_triangle_mesh(args.scene_path)
@@ -159,15 +165,19 @@ if __name__ == '__main__':
                     is_selectable = False,
                     gui_affine    = False,
                     color         = (160 / 255, 160 / 255, 160 / 255, 1.0),
-                    name          = "Scene",
-                    z_up          = True)
-        geometry_list.append(scene_mesh_seq)
+                    name          = "Scene")
+        
+        geometry_dict.update({"scene": scene_mesh_seq})
     
-    point_cloud = load_point_cloud(pkl_results)
-    if point_cloud is not None:
-        geometry_list.append(point_cloud)
+    point_cloud = load_point_cloud(pkl_results, trans = geometry_dict['trans_offset'])
 
-    for geometry in geometry_list:
-        v.scene.add(geometry)
+    if point_cloud is not None:
+        geometry_dict.update({"points": point_cloud})
+
+    for _, geometry in geometry_dict.items():
+        try:
+            v.scene.add(geometry)
+        except:
+            pass
 
     v.run()
