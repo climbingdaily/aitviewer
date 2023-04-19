@@ -36,7 +36,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='将手动姿势添加到序列数据中。')
     parser.add_argument('-P', '--pkl_file', type=str,
                         help='包含序列数据的PKL文件的路径。')
-    parser.add_argument('-O', '--pose_file', type=str, default='export\SMPL\manual_pose.npz',
+    parser.add_argument('-O', '--pose_file', type=str, default='export\SMPL\second_person_opt_pose-annot.npz',
                         help='包含姿势数据的NPZ文件的路径。')
     parser.add_argument('-N', '--person', type=str, default='second_person',
                         help='指定要更新手动姿势的人物。默认为"second_person"。')
