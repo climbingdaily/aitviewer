@@ -127,18 +127,17 @@ def load_point_cloud(pkl_results, person='second_person', points_num = 1024, tra
     return ptc_sloper4d
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='将手动姿势添加到序列数据中. ')
+    parser = argparse.ArgumentParser(description='SLOPER4D viewer')
     parser.add_argument('-P', '--pkl_file', type=str, 
-                        default='D:\\Yudi Dai\\Documents\\Downloads\\2023-04-18T00_38_48_test_test.pkl',
-                        help='包含序列数据的PKL文件的路径. ')
+                        help='PKL file path')
     parser.add_argument('-N', '--person', type=str, default='second_person',
-                        help='指定要更新手动姿势的人物. 默认为"second_person". ')
+                        help='The person that to visualize. default to "second_person". ')
     parser.add_argument('--pose', type=str, default='opt_pose',
                         help='The pose that will be loaded from PKL file"')
     parser.add_argument('--is_global', type=bool, default=False,
-                        help='Whether to show the global translation')
+                        help='whether to show the global translation of the person')
     parser.add_argument('-S', '--scene_path', type=str, default='',
-                        help='指定一个序列数据变量的名称. 如果不提供,则从PKL文件中加载. ')
+                        help='The scene mesh path')
 
     v = Viewer()
     args = parser.parse_args()
