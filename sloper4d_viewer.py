@@ -122,7 +122,7 @@ def load_point_cloud(pkl_results, person='second_person', points_num = 1024, tra
 
     pp = np.array([fix_points_num(pts, points_num) for pts in point_clouds])
     ptc_sloper4d = PointClouds(points = pp - trans[:, None, :] if trans is not None else pp, 
-                               color  = (149/255, 85/255, 149/255, 0.5), 
+                               color  = (58/255, 147/255, 189/255, 0.5), 
                                z_up   = True)
     return ptc_sloper4d
 
